@@ -31,6 +31,7 @@ def login():
             db.session.add(user)
             db.session.commit()
             # flash(f"{user.username}", 'success')
+            next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('base_route.home'))
     return render_template('auth/login.html', title='Login', form=form)
 
