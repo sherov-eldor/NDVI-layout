@@ -104,6 +104,7 @@
                     elFeedBackSpan.textContent = txt
                     elFeedBackSpan.style.color = 'red'
                     elFileInput.classList.add('is-invalid')
+                    file_feedback = true
                 } else {
                     file_feedback = false
                     elFeedBackSpan.textContent = ''
@@ -116,25 +117,42 @@
             }
         }
 
+        function classValidation(){
+            let formSelect = document.querySelectorAll('.map__form select')
+            let formInput = document.querySelectorAll('.map__form input')
+            formSelect.forEach((element) => {
+                if (element.value) {
+                    element.classList.remove('is-invalid')
+                    element.classList.add('is-valid')
+                } else {
+                    element.classList.remove('is-valid')
+                    element.classList.add('is-invalid')
+                }
+            })
+
+            formInput.forEach((element) => {
+                if (element.value) {
+                    element.classList.remove('is-invalid')
+                    element.classList.add('is-valid')
+                } else {
+                    element.classList.remove('is-valid')
+                    element.classList.add('is-invalid')
+                }
+
+            })
+        }
+
 
         $(".form-file").change(function () {
             validateFileType()
         });
 
         $('#preview-button').on('click', () => {
-            let formSelect = document.querySelectorAll('.map__form select')
-            let formInput = document.querySelectorAll('.map__form input')
             let formData = new FormData(form);
             formData.append("preview", true)
             if (form.checkValidity() && !file_feedback) {
 
-                formSelect.forEach((element) => {
-                    element.classList.add('is-valid')
-                })
-
-                formInput.forEach((element) => {
-                    element.classList.add('is-valid')
-                })
+                classValidation()
 
                 $.ajax({
                     url: "{{ url_for('base_route.home') }}",
@@ -143,7 +161,7 @@
                     processData: false,
                     data: formData,
                     success: function (data) {
-                        console.log(data)
+                        alert(data)
                     },
                     done: data => {
                         console.log(data)
@@ -158,26 +176,7 @@
                     }
                 })
             } else {
-                formSelect.forEach((element) => {
-                    if (element.value) {
-                        element.classList.remove('is-invalid')
-                        element.classList.add('is-valid')
-                    } else {
-                        element.classList.remove('is-valid')
-                        element.classList.add('is-invalid')
-                    }
-                })
-
-                formInput.forEach((element) => {
-                    if (element.value) {
-                        element.classList.remove('is-invalid')
-                        element.classList.add('is-valid')
-                    } else {
-                        element.classList.remove('is-valid')
-                        element.classList.add('is-invalid')
-                    }
-
-                })
+                classValidation()
                 validateFileType()
             }
         });
