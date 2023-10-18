@@ -7,6 +7,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
+    <!-- jquery  -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <!-- leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -25,7 +30,7 @@
         <header class="header">
             <div class="header__inner">
                 {% if current_user.is_authenticated %}
-                    <h3>{{ current_user.username }}</h3>
+                <h3>{{ current_user.username }}</h3>
                 {% endif %}
                 <a class="btn btn-warning btn-logout" type="button" href="{{ url_for('auth_route.logout') }}">Logout</a>
             </div>
@@ -37,33 +42,30 @@
                         <div id="map"></div>
                         <div class="map__form-content">
                             <div class="map__form-inner">
-                                <form class="map__form" novalidate>
-                                    <div class="mb-3">
-                                        <label for="region" class="form-label">Viloyat</label>
-                                        <select id="region" class="form-select region" aria-label="district" required>
-
-                                        </select>
+                                <form class="map__form" enctype='multipart/form-data' novalidate method="POST">
+                                    {{ form.hidden_tag() }}
+                                    <div class="mb-3 has-validation">
+                                        {{ form.region.label(class='form-label') }}
+                                        {{ form.region(class='form-select region-select') }}
                                     </div>
                                     <div class="mb-3">
-                                        <label for="index" class="form-label">Index</label>
-                                        <select id="index" class="form-select index" aria-label="index" required>
-                                            <option selected>Index1</option>
-                                            <option value="1">Index2</option>
-                                            <option value="2">Index3</option>
-                                            <option value="3">Index4</option>
-                                        </select>
+                                        {{ form.index.label(class='form-label') }}
+                                        {{ form.index(class='form-select index-select') }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.date.label(class='form-label') }}
+                                        {{ form.date(class='form-select form-date', id="date") }}
                                     </div>
                                     <div class="mb-3 has-validation">
-                                        <label for="date" class="form-label">Kun</label>
-                                        <input type="date" class="form-control form-date" id="date" required>
+                                        {{ form.file.label(class='form-label') }}
+                                        {{ form.file(class='form-select form-file', id="file", placeholder="Select file") }}
+                                        <div class="file-feedback">
+                                            <span class="file-feedback-txt"></span>
+                                        </div>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="file" class="form-label">File</label>
-                                        <input type="file" class="form-control form-file" id="file"
-                                            placeholder="Select file" required>
-                                    </div>
-
-                                    <button type="submit" class="btn btn-primary form__watch-btn">Ko'rish</button>
+                                    {# {{ form.submit(class='btn btn-primary form__watch-btn') }} #}
+                                    <button type="button" id="preview-button"
+                                        class="btn btn-primary form__watch-btn">Ko'rish</button>
                                     <button type="submit" class="btn btn-success form__enter-btn">Tizimga
                                         kiritish</button>
                                 </form>
@@ -81,6 +83,105 @@
 
     <script src="{{ url_for('static', filename='data/districts.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/map.js') }}"></script>
+
+    <script>
+        var form = document.querySelector('.map__form')
+        let file_feedback = true
+        let elFileInput = document.querySelector('.form-file')
+
+        function validateFileType() {
+            var selectedFile = document.querySelector('.form-file').files[0]
+            let elFeedBackSpan = document.querySelector('.file-feedback-txt')
+            let fileName = selectedFile?.name
+            let fileFormat = null
+            var allowedTypes = ['xlsx', 'zip', 'rar'];
+
+            if (fileName) {
+                fileFormat = fileName.substring(fileName.lastIndexOf(".") + 1, fileName.length)
+                if (!allowedTypes.includes(fileFormat)) {
+                    let txt = 'Invalid file type. Please upload a XLSX, ZIP, or RAR file.';
+                    let elFileFedback = document.querySelector('.file-feedback')
+                    elFeedBackSpan.textContent = txt
+                    elFeedBackSpan.style.color = 'red'
+                    elFileInput.classList.add('is-invalid')
+                } else {
+                    file_feedback = false
+                    elFeedBackSpan.textContent = ''
+                    if (elFileInput.classList.contains('is-invalid')) {
+                        elFileInput.classList.remove('is-invalid')
+                        elFileInput.classList.add('is-valid')
+                    }
+                }
+
+            }
+        }
+
+
+        $(".form-file").change(function () {
+            validateFileType()
+        });
+
+        $('#preview-button').on('click', () => {
+            let formSelect = document.querySelectorAll('.map__form select')
+            let formInput = document.querySelectorAll('.map__form input')
+            let formData = new FormData(form);
+            formData.append("preview", true)
+            if (form.checkValidity() && !file_feedback) {
+
+                formSelect.forEach((element) => {
+                    element.classList.add('is-valid')
+                })
+
+                formInput.forEach((element) => {
+                    element.classList.add('is-valid')
+                })
+
+                $.ajax({
+                    url: "{{ url_for('base_route.home') }}",
+                    type: "POST",
+                    contentType: false,
+                    processData: false,
+                    data: formData,
+                    success: function (data) {
+                        console.log(data)
+                    },
+                    done: data => {
+                        console.log(data)
+                        //     let geojson = L.geoJSON(data, {
+                        //         style: {
+                        //             fillColor: data.features[0].properties.grid_color
+                        //         }
+                        //     });
+                        //     console.log(data.features[0].properties.grid_color);
+                        //     geojson.addTo(map);
+                        //     map.fitBounds(geojson.getBounds());
+                    }
+                })
+            } else {
+                formSelect.forEach((element) => {
+                    if (element.value) {
+                        element.classList.remove('is-invalid')
+                        element.classList.add('is-valid')
+                    } else {
+                        element.classList.remove('is-valid')
+                        element.classList.add('is-invalid')
+                    }
+                })
+
+                formInput.forEach((element) => {
+                    if (element.value) {
+                        element.classList.remove('is-invalid')
+                        element.classList.add('is-valid')
+                    } else {
+                        element.classList.remove('is-valid')
+                        element.classList.add('is-invalid')
+                    }
+
+                })
+                validateFileType()
+            }
+        });
+    </script>
 </body>
 
 </html>

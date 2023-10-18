@@ -1,13 +1,13 @@
 let elRegion = document.querySelector('.region')
 let elTableBody = document.querySelector('.table tbody')
 
-if (elRegion) {
-    districts.forEach(district => {
-        elRegion.innerHTML += `
-            <option value="${district.value}" >${district.name}</option>
-        `
-    });
-}
+// if (elRegion) {
+//     districts.forEach(district => {
+//         elRegion.innerHTML += `
+//             <option value="${district.value}" >${district.name}</option>
+//         `
+//     });
+// }
 
 
 if (elTableBody) {
@@ -43,35 +43,4 @@ if (elMap) {
     let elIndex = document.querySelector('.index')
     let elDate = document.querySelector('.form-date')
     let elFile = document.querySelector('.form-file')
-
-    var forms = document.querySelectorAll('.map__form')
-
-    Array.prototype.slice.call(forms)
-        .forEach(function (form) {
-            form.addEventListener('submit', function (event) {
-                
-                if (!form.checkValidity()) {
-                    event.preventDefault()
-                    event.stopPropagation()
-
-                    
-                } else {
-                    event.preventDefault()
-
-                    submit.style.display = 'none'
-                    enter.style.display = 'block'
-
-                    console.log(elRegion.value);
-                    console.log(elIndex.value);
-                    console.log(elDate.value);
-                    console.log(elFile.value);
-                    let geojson_data = elFile.value
-                    let file_type = geojson_data.slice(-7)
-                    console.log(file_type);
-                }
-                
-
-                form.classList.add('was-validated')
-            }, false)
-        })
 }
